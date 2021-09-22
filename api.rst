@@ -977,3 +977,121 @@ Gets the number of edges from the graph storage.
 -------------------  -----------
 int64_t              Number of edges in the graph                           
 ===================  ===========
+
+*************
+Class: Batch
+*************
+Contains metadata, edges and embeddings for a single batch.
+
+
+Constructor
+--------------------------
+::
+
+    Batch(bool train)
+
+
+Functions
+--------------------------
+::
+
+    void localSample()
+
+Construct additional negative samples and neighborhood information from the batch.
+
+===================  ==========  ===========
+   Parameter         Type        Description
+-------------------  ----------  -----------
+===================  ==========  ===========
+
+===================  ===========
+   Return Type       Description
+-------------------  -----------
+void                 
+===================  ===========
+
+::
+
+    void embeddingsToDevice(int device_id)
+
+Transfers embeddings, optimizer state, and indices to specified device.
+
+===================  ==========  ===========
+   Parameter         Type        Description
+-------------------  ----------  -----------
+device_id            int         Device id to transfer to
+===================  ==========  ===========
+
+===================  ===========
+   Return Type       Description
+-------------------  -----------
+void                 
+===================  ===========
+
+::
+
+    void prepareBatch()
+
+Populates the src_pos_embeddings, dst_post_embeddings, relation_embeddings, src_neg_embeddings, and dst_neg_embeddings tensors for model computation.
+
+===================  ==========  ===========
+   Parameter         Type        Description
+-------------------  ----------  -----------
+===================  ==========  ===========
+
+===================  ===========
+   Return Type       Description
+-------------------  -----------
+void                 
+===================  ===========
+
+::
+
+    void accumulateGradients()
+
+Accumulates gradients into the unique_node_gradients and unique_relation_gradients tensors, and applies optimizer update rule to create the unique_node_gradients2 and unique_relation_gradients2 tensors.
+
+===================  ==========  ===========
+   Parameter         Type        Description
+-------------------  ----------  -----------
+===================  ==========  ===========
+
+===================  ===========
+   Return Type       Description
+-------------------  -----------
+void                 
+===================  ===========
+
+::
+
+    void embeddingsToHost()
+
+Transfers gradients and embedding updates to host.
+
+===================  ==========  ===========
+   Parameter         Type        Description
+-------------------  ----------  -----------
+===================  ==========  ===========
+
+===================  ===========
+   Return Type       Description
+-------------------  -----------
+void                 
+===================  ===========
+
+::
+
+    void clear()
+
+Clears all tensor data in the batch.
+
+===================  ==========  ===========
+   Parameter         Type        Description
+-------------------  ----------  -----------
+===================  ==========  ===========
+
+===================  ===========
+   Return Type       Description
+-------------------  -----------
+void                 
+===================  ===========
