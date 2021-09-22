@@ -371,6 +371,7 @@ Forward specified batch through model to learn labels
 batch                Batch*      The input embedding batch
 train                bool        Set to true for train, false for evaluation
 ===================  ==========  ===========
+
 ===================  ===========
    Return Type       Description
 -------------------  -----------
@@ -394,6 +395,7 @@ batch                Batch     Batch of embeddings to train on
 -------------------  -----------
 void
 ===================  ===========
+
 ::
 
     void evaluate(Batch *batch)
@@ -438,6 +440,7 @@ Forward specified batch through model to learn edges
 batch                Batch*      The input embedding batch
 train                bool        Set to true for train, false for evaluation
 ===================  ==========  ===========
+
 ======================================================================  ===========
    Return Type                                                          Description
 ----------------------------------------------------------------------  -----------
@@ -461,6 +464,7 @@ batch                Batch     Batch of embeddings to train on
 -------------------  -----------
 void
 ===================  ===========
+
 ::
 
     void evaluate(Batch *batch)
