@@ -745,3 +745,234 @@ validation           bool      If true, evaluate on validation set. Otherwise ev
 -------------------  -
 void
 ===================  =
+
+*************
+Class: GraphBatcher
+*************
+Represents a training or evaluation set for graph embedding. Iterates over batches and updates model parameters during training.
+
+Class Members
+--------------------------
+==================  ======
+   Name             Type
+------------------  ------
+graph_storage_      GraphModelStorage
+neighbor_sampler_   NeighborSampler
+
+Constructor
+--------------------------
+::
+
+    GraphBatcher(GraphModelStorage *graph_storage, EdgeSampler *edge_sampler, NegativeSampler *negative_sampler, NeighborSampler *training_neighbor_sampler, NeighborSampler *evaluation_neighbor_sampler = nullptr)
+
+
+Functions
+--------------------------
+::
+
+    void setTrainSet()
+
+Sets graph storage, negative sampler, and neighbor sampler to training set.
+
+===================  ==========  ===========
+   Parameter         Type        Description
+-------------------  ----------  -----------
+===================  ==========  ===========
+
+===================  ===========
+   Return Type       Description
+-------------------  -----------
+void                 
+===================  ===========
+
+::
+
+    void setValidationSet()
+
+Sets graph storage, negative sampler, and neighbor sampler to validation set.
+
+===================  ==========  ===========
+   Parameter         Type        Description
+-------------------  ----------  -----------
+===================  ==========  ===========
+
+===================  ===========
+   Return Type       Description
+-------------------  -----------
+void                 
+===================  ===========
+
+::
+
+    void loadStorage()
+
+Load graph from storage.
+
+===================  ==========  ===========
+   Parameter         Type        Description
+-------------------  ----------  -----------
+===================  ==========  ===========
+
+===================  ===========
+   Return Type       Description
+-------------------  -----------
+void                 
+===================  ===========
+
+::
+
+    void unloadStorage(bool write = false)
+
+Unload graph from storage.
+
+===================  ==========  ===========
+   Parameter         Type        Description
+-------------------  ----------  -----------
+write                bool        Set to true to write graph state to disc
+===================  ==========  ===========
+
+===================  ===========
+   Return Type       Description
+-------------------  -----------
+void                 
+===================  ===========
+
+::
+
+    int64_t getEpochsProcessed()
+
+Get the number of epochs processed.
+
+===================  ==========  ===========
+   Parameter         Type        Description
+-------------------  ----------  -----------
+===================  ==========  ===========
+
+===================  ===========
+   Return Type       Description
+-------------------  -----------
+int64_t              Number of epochs processed                
+===================  ===========
+
+::
+
+    bool hasNextBatch()
+
+Check to see whether another batch exists.
+
+===================  ==========  ===========
+   Parameter         Type        Description
+-------------------  ----------  -----------
+===================  ==========  ===========
+
+===================  ===========
+   Return Type       Description
+-------------------  -----------
+bool                 True if batch exists, false if not             
+===================  ===========
+
+::
+
+    Batch *getBatch()
+
+Gets the next batch to be processed by the pipeline. Loads edges from storage, constructs negative edges, and loads CPU embedding parameters.
+
+===================  ==========  ===========
+   Parameter         Type        Description
+-------------------  ----------  -----------
+===================  ==========  ===========
+
+===================  ===========
+   Return Type       Description
+-------------------  -----------
+Batch*               The next batch          
+===================  ===========
+
+::
+
+    void loadGPUParameters(Batch *batch, bool encoded=false)
+
+Loads GPU parameters into batch.
+
+===================  ==========  ===========
+   Parameter         Type        Description
+-------------------  ----------  -----------
+batch                Batch*      Batch object to load parameters into
+encoded              bool        True for encoded, false if not
+===================  ==========  ===========
+
+===================  ===========
+   Return Type       Description
+-------------------  -----------
+void                           
+===================  ===========
+
+::
+
+    void updateEmbeddingsForBatch(Batch *batch, bool gpu)
+
+Applies gradient updates to underlying storage.
+
+===================  ==========  ===========
+   Parameter         Type        Description
+-------------------  ----------  -----------
+batch                Batch*      Batch object to apply updates from
+gpu                  bool        If true, only the gpu parameters will be updated
+===================  ==========  ===========
+
+===================  ===========
+   Return Type       Description
+-------------------  -----------
+void                           
+===================  ===========
+
+::
+
+    void finishedBatch()
+
+Notify that the batch has been completed.
+
+===================  ==========  ===========
+   Parameter         Type        Description
+-------------------  ----------  -----------
+===================  ==========  ===========
+
+===================  ===========
+   Return Type       Description
+-------------------  -----------
+void                           
+===================  ===========
+
+::
+
+    void nextEpoch()
+
+Notify that the epoch has been completed. Prepares dataset for a new epoch.
+
+===================  ==========  ===========
+   Parameter         Type        Description
+-------------------  ----------  -----------
+===================  ==========  ===========
+
+===================  ===========
+   Return Type       Description
+-------------------  -----------
+void                           
+===================  ===========
+
+::
+
+    int64_t getNumEdges()
+
+Gets the number of edges from the graph storage.
+
+===================  ==========  ===========
+   Parameter         Type        Description
+-------------------  ----------  -----------
+===================  ==========  ===========
+
+===================  ===========
+   Return Type       Description
+-------------------  -----------
+int64_t              Number of edges in the graph                           
+===================  ===========
