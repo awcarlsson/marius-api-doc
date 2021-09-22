@@ -118,8 +118,8 @@ Below shows a simplified version of the main entrypoint to Marius.
 
 	    GraphBatcher *graph_batcher = new GraphBatcher(graph_model_storage, edge_sampler, negative_sampler, neighbor_sampler);
 
-	    Trainer *trainer = new PipelineTrainer(graph_batcher, model);
-	    Evaluator *evaluator = new PipelineEvaluator(graph_batcher, model);
+	    Trainer *trainer = new SynchronousTrainer(graph_batcher, model);
+	    Evaluator *evaluator = new SynchronousEvaluator(graph_batcher, model);
 	    
             trainer->train(num_epochs);
 	    evaluator->evaluate();
@@ -133,75 +133,42 @@ Below shows a simplified version of the main entrypoint to Marius.
 Training Loop
 *************
 
-In the training loop, the specified Trainer will iteratively transfer batches to the GPU to calculate gradients. This process runs for the specified number of epochs. Below is example code showing a train function:
+In the training loop, the specified Trainer will iteratively transfer batches to the GPU to calculate gradients. This process runs for the specified number of epochs. Below shows a simplified version of the synchronous training process in Marius (with timing/reporting removed).
 
 ::
 
 	void SynchronousTrainer::train(int num_epochs) {
+	
+	    // set dataset to training and load edge/parameters
 	    graph_batcher_->setTrainSet();
 	    graph_batcher_->loadStorage();
-	    Timer timer = Timer(false);
 
 	    for (int epoch = 0; epoch < num_epochs; epoch++) {
-		timer.start();
-		SPDLOG_INFO("################ Starting training epoch {} ################", graph_batcher_->getEpochsProcessed() + 1);
+	    
 		while (graph_batcher_->hasNextBatch()) {
 
 		    // gets data and parameters for the next batch
 		    Batch *batch = graph_batcher_->getBatch();
 
 		    // transfers batch to the GPU
-		    batch->embeddingsToDevice(0);
-
-		    // loads model parameters that reside in the GPU
-		    graph_batcher_->loadGPUParameters(batch);
+		    batch->embeddingsToDevice();
 
 		    // compute forward and backward pass of the model
 		    model_->train(batch);
 
-		    // transfer gradients and update parameters
-		    if (batch->unique_node_embeddings_.defined()) {
-		        batch->accumulateGradients();
-		        batch->embeddingsToHost();
+		    // accumulate node embedding gradients
+		    batch->accumulateGradients();
 
-		        graph_batcher_->updateEmbeddingsForBatch(batch, true);
-		        graph_batcher_->updateEmbeddingsForBatch(batch, false);
-		    }
+		    // transfer gradient back to host machine
+		    batch->embeddingsToHost();
 
-		    // notify that the batch has been completed
-		    graph_batcher_->finishedBatch();
-
-		    // log progress
-		    progress_reporter_->addResult(batch->batch_size_);
+		    // update node embedding table and optimizer state
+		    graph_batcher_->updateEmbeddingsForBatch(batch);
 		}
-		SPDLOG_INFO("################ Finished training epoch {} ################", graph_batcher_->getEpochsProcessed() + 1);
 
 		// notify that the epoch has been completed
 		graph_batcher_->nextEpoch();
-		progress_reporter_->clear();
-		timer.stop();
-
-		std::string item_name;
-		int64_t num_items = 0;
-		if (marius_options.general.learning_task == LearningTask::LinkPrediction) {
-		    item_name = "Edges";
-		    num_items = graph_batcher_->getNumEdges();
-		} else if (marius_options.general.learning_task == LearningTask::NodeClassification) {
-		    item_name = "Nodes";
-		    num_items = marius_options.general.num_train;
-		}
-
-		int64_t epoch_time = timer.getDuration();
-		float items_per_second = (float) num_items / ((float) epoch_time / 1000);
-		SPDLOG_INFO("Epoch Runtime: {}ms", epoch_time);
-		SPDLOG_INFO("{} per Second: {}", item_name, items_per_second);
-
-		if (marius_options.model.encoder_model != EncoderModelType::None && marius_options.general.learning_task == LearningTask::LinkPrediction) {
-		    model_->encoder_->encodeFullGraph(graph_batcher_->neighbor_sampler_, graph_batcher_->graph_storage_);
-		}
-
 	    }
-	    graph_batcher_->unloadStorage(true);
 	}
 	
 *************
@@ -214,35 +181,21 @@ The Evaluator evaluates the generated embeddings on the validation or test set. 
 
 	void SynchronousEvaluator::evaluate(bool validation) {
 
+	    // Set proper evaluation set
 	    if (validation) {
 		graph_batcher_->setValidationSet();
 	    } else {
 		graph_batcher_->setTestSet();
 	    }
-
 	    graph_batcher_->loadStorage();
 
-	    bool encoded = false;
-	    if (marius_options.model.encoder_model != EncoderModelType::None) {
-		encoded = true;
-	    }
 
-	    Timer timer = Timer(false);
-	    timer.start();
-	    int num_batches = 0;
+	    // evaluation loop
 	    while (graph_batcher_->hasNextBatch()) {
-		Batch *batch = graph_batcher_->getBatch(); // gets the node embeddings and edges for the batch
-		batch->embeddingsToDevice(0); // transfers the node embeddings to the GPU
-		graph_batcher_->loadGPUParameters(batch, encoded); // load the edge-type embeddings to batch
+		Batch *batch = graph_batcher_->getBatch();
+		batch->embeddingsToDevice();
 		model_->evaluate(batch);
-		graph_batcher_->finishedBatch();
-		num_batches++;
 	    }
-	    timer.stop();
-
-	    model_->reporter_->report();
-
-	    graph_batcher_->unloadStorage();
 	}
 
 *************
