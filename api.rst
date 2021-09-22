@@ -238,6 +238,9 @@ The Evaluator evaluates the generated embeddings on the validation or test set. 
 	}
 
 *************
+Classes/Functions
+*************
+*************
 Class: Model
 *************
 
@@ -341,6 +344,140 @@ Load model from experiment directory specified in configuration file.
 -------------------  -----------
 void
 ===================  ===========
+
+*************
+Subclass: NodeClassificationModel (Model)
+*************
+
+A model designed for node classification tasks, i.e. assigning labels.
+
+Constructor
+--------------------------
+::
+
+    NodeClassificationModel(Encoder *encoder, LossFunction *loss, Regularizer *regularizer, Featurizer *featurizer, Reporter *reporter = nullptr)
+
+Functions
+--------------------------
+::
+
+    Labels forward(Batch *batch, bool train)
+
+Forward specified batch through model to learn labels
+
+===================  ==========  ===========
+   Parameter         Type        Description
+-------------------  ----------  -----------
+batch                Batch*      The input embedding batch
+train                bool        Set to true for train, false for evaluation
+===================  ==========  ===========
+===================  ===========
+   Return Type       Description
+-------------------  -----------
+Labels               The new node labels
+===================  ===========
+
+::
+
+    void train(Batch *batch)
+
+Runs training process on specified batch.
+
+===================  ========  ===========
+   Parameter         Type      Description
+-------------------  --------  -----------
+batch                Batch     Batch of embeddings to train on
+===================  ========  ===========
+
+===================  ===========
+   Return Type       Description
+-------------------  -----------
+void
+===================  ===========
+::
+
+    void evaluate(Batch *batch)
+
+Runs evaluation process on specified batch.
+
+===================  ========  ===========
+   Parameter         Type      Description
+-------------------  --------  -----------
+batch                Batch     Batch of embeddings to evaluate
+===================  ========  ===========
+
+===================  =
+   Return Type
+-------------------  -
+void
+===================  =
+
+*************
+Subclass: LinkPredictionModel (Model)
+*************
+
+A model designed for link prediction tasks.
+
+Constructor
+--------------------------
+::
+
+    LinkPredictionModel(Encoder *encoder, Decoder *decoder, LossFunction *loss, Regularizer *regularizer, Featurizer *featurizer, Reporter *reporter = nullptr)
+
+Functions
+--------------------------
+::
+
+    std::tuple<torch::Tensor, torch::Tensor, torch::Tensor, torch::Tensor> forward(Batch *batch, bool train)
+
+Forward specified batch through model to learn edges
+
+===================  ==========  ===========
+   Parameter         Type        Description
+-------------------  ----------  -----------
+batch                Batch*      The input embedding batch
+train                bool        Set to true for train, false for evaluation
+===================  ==========  ===========
+======================================================================  ===========
+   Return Type                                                          Description
+----------------------------------------------------------------------  -----------
+std::tuple<torch::Tensor, torch::Tensor, torch::Tensor, torch::Tensor>  Updated edge embeddings
+======================================================================  ===========
+
+::
+
+    void train(Batch *batch)
+
+Runs training process on specified batch.
+
+===================  ========  ===========
+   Parameter         Type      Description
+-------------------  --------  -----------
+batch                Batch     Batch of embeddings to train on
+===================  ========  ===========
+
+===================  ===========
+   Return Type       Description
+-------------------  -----------
+void
+===================  ===========
+::
+
+    void evaluate(Batch *batch)
+
+Runs evaluation process on specified batch.
+
+===================  ========  ===========
+   Parameter         Type      Description
+-------------------  --------  -----------
+batch                Batch     Batch of embeddings to evaluate
+===================  ========  ===========
+
+===================  =
+   Return Type
+-------------------  -
+void
+===================  =
 
 *************
 Class: Featurizer
