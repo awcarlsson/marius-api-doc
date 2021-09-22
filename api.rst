@@ -758,6 +758,7 @@ Class Members
 ------------------  ------
 graph_storage_      GraphModelStorage
 neighbor_sampler_   NeighborSampler
+==================  ======
 
 Constructor
 --------------------------
