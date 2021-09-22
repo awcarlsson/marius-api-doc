@@ -1,11 +1,79 @@
 .. _api
 
 *************
-Model, Training, Evaluation API
+Marius API
 *************
 
+This document described the Marius programatic API. The API can be used in Python or C++, where there is a one-to-one mapping between the two. Implementation is done in C++, and python bindings are generated over the C++ API.
+
+This document covers:
+
+1. An overview of the main API objects.
+2. How Marius uses the API internally to perform training and evaluation.
+3. How users can define custom training routines and models.
+4. Detailed API object and call information.
+
 *************
-General Training and Evaluation Process
+Main API Objects
+*************
+
+
+Trainer/Evaluator
+---------
+
+Defines the high-level training/evaluation loop for a given input model and dataset. 
+
+
+Model : torch.nn.Module
+---------
+
+The model defines all initialization of global parameters, a single iteration of training, a single iteration of evaluation, the featurizer, the GNN encoder, and the decoder. Where the featurizer, encoder, and decoder are interchangable pytorch modules. The model extends the torch.nn.module interface and supports distributed data parallel training for built-in models.
+
+*Featurizer*: Generates new embeddings for nodes by combining node features and their respective learnable embeddings in order to emphasize individual node properties. 
+
+*Encoder*: Generates new embeddings for nodes by aggregating node embedding with information about k-hop neighboring nodes.
+
+*Decoder*: Takes input embeddings and produces an output score, only used for link prediction. Consists of a relation operator and a comparator.
+
+- Relation operator: Applies edge-type embeddings to node embeddigns to produce a new node embedding with edge-type information included.
+- Comparator: Compares the embeddings of a given set of source, destination, and negative embeddings to produce output scores for the postive and negative edges.
+
+GraphBatcher
+---------
+
+The GraphBatcher exposes an iterator of batches, which defines the order in which the input data is processed. 
+
+Batch
+---------
+
+The Batch class contains all edges, neighbors, features, and embeddings for a given batch of training or evaluation data. It is a stateful object where class members are initalized, updated, deleted at various points in the training/evaluation pipeline. 
+
+Samplers
+----------
+
+There are four types of samplers: edge, node, negative, and neighborhood samplers. Each sampler defines how samples are produced from the graph for the given sampling item of interest. 
+
+GraphModelStorage
+----------
+
+This class contains an interface to access the graph, node features and embeddings, and embedding optimizer state, regardless of the underlying storage backends for each type of data. 
+
+MariusGraph
+----------
+
+This class contains an arbitrary in-memory graph/sub-graph in CSR representation and supports fast, vectorized CPU and GPU neighbor sampling.
+
+
+Minor classes
+---------
+
+- Loss: Loss function to use for the model.
+- Regularizer: Regularization to perform over the embeddings
+- Reporter: Class used to report accuracy metrics and training/evaluation progress.
+
+
+*************
+High Level Training and Evaluation Process
 *************
 
 Marius is a system under active development for training embeddings for large-scale graphs on a single machine. The general outline for training and evaluating is as follows:
