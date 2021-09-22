@@ -4,6 +4,119 @@
 Model, Training, Evaluation API
 *************
 
+Marius is a system under active development for training embeddings for large-scale graphs on a single machine. The general outline for training and evaluating is as follows:
+
+1. Parse the input configuration file which initializes Marius with desired settings
+
+2. Initialize the model used to train and evaluate the graph embeddings
+
+3. Initialize the graph model storage
+
+4. Initialize the edge, negative, training neighbor, and evaluation neighbor samplers
+
+5. Initialize the graph batcher
+
+6. Initialize the trainer or evaluator
+
+7. Train/evaluate for specified number of epochs
+
+Below is example code showing a typical training/evaluation process:
+
+::
+
+	void marius(int argc, char *argv[]) {
+
+	    marius_options = parseConfig(argc, argv);
+
+	    bool train = true;
+	    string path = string(argv[0]);
+	    string base_filename = path.substr(path.find_last_of("/\\") + 1);
+	    if (strcmp(base_filename.c_str(), "marius_eval") == 0) {
+		train = false;
+	    }
+
+	    if (!train) {
+		marius_options.storage.reinitialize_edges = false;
+		marius_options.storage.reinitialize_embeddings = false;
+	    }
+
+	    torch::manual_seed(marius_options.general.random_seed);
+
+	    Timer preprocessing_timer = Timer(false);
+	    preprocessing_timer.start();
+	    SPDLOG_INFO("Start preprocessing");
+	    
+	    Model *model = initializeModel();
+
+	    GraphModelStorage *graph_model_storage = initializeStorage(train);
+	    
+	    EdgeSampler *edge_sampler = new RandomEdgeSampler(graph_model_storage);
+	    NegativeSampler *negative_sampler = nullptr;
+	    NeighborSampler *training_neighbor_sampler = nullptr;
+	    NeighborSampler *evaluation_neighbor_sampler = nullptr;
+
+	    if (marius_options.general.learning_task == LearningTask::LinkPrediction) {
+		negative_sampler = new RandomNegativeSampler(graph_model_storage);
+	    }
+
+	    if (marius_options.model.encoder_model != EncoderModelType::None) {
+		training_neighbor_sampler = new kHopNeighborSampler(graph_model_storage, marius_options.model.num_layers, marius_options.training_sampling.neighbor_sampling_strategy, marius_options.training_sampling.max_neighbors_size);
+		evaluation_neighbor_sampler = new kHopNeighborSampler(graph_model_storage, marius_options.evaluation.num_layers, marius_options.evaluation.neighbor_sampling_strategy, marius_options.evaluation.max_neighbors_size);
+	    }
+
+	    GraphBatcher *graph_batcher = new GraphBatcher(graph_model_storage, edge_sampler, negative_sampler, training_neighbor_sampler, evaluation_neighbor_sampler);
+
+	    preprocessing_timer.stop();
+	    int64_t preprocessing_time = preprocessing_timer.getDuration();
+
+	    SPDLOG_INFO("Preprocessing Complete: {}s", (double) preprocessing_time / 1000);
+
+	    Trainer *trainer;
+	    Evaluator *evaluator;
+
+	    if (train) {
+		if (marius_options.training.synchronous) {
+		    trainer = new SynchronousTrainer(graph_batcher, model);
+		} else {
+		    trainer = new PipelineTrainer(graph_batcher, model);
+		}
+
+		if (marius_options.evaluation.synchronous) {
+		    evaluator = new SynchronousEvaluator(graph_batcher, model);
+		} else {
+		    evaluator = new PipelineEvaluator(graph_batcher, model);
+		}
+
+		for (int epoch = 0; epoch < marius_options.training.num_epochs; epoch += marius_options.evaluation.epochs_per_eval) {
+		    int num_epochs = marius_options.evaluation.epochs_per_eval;
+		    if (marius_options.training.num_epochs < num_epochs) {
+		        num_epochs = marius_options.training.num_epochs;
+		        trainer->train(num_epochs);
+		    } else {
+		        trainer->train(num_epochs);
+		        evaluator->evaluate(true);
+		    }
+		}
+		evaluator->evaluate(false);
+
+		model->save();
+
+	    } else {
+		if (marius_options.evaluation.synchronous) {
+		    evaluator = new SynchronousEvaluator(graph_batcher, model);
+		} else {
+		    evaluator = new PipelineEvaluator(graph_batcher, model);
+		}
+		evaluator->evaluate(false);
+	    }
+
+	    // garbage collect
+	    delete graph_model_storage;
+	    delete trainer;
+	    delete evaluator;
+	    delete graph_batcher;
+	}
+
 *************
 Class: Model
 *************
