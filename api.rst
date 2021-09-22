@@ -4,7 +4,7 @@
 Marius API
 *************
 
-This document described the Marius programatic API. The API can be used in Python or C++, where there is a one-to-one mapping between the two. Implementation is done in C++, and python bindings are generated over the C++ API.
+This document describs the Marius programatic API. The API can be used in Python or C++, where there is a one-to-one mapping between the two. Implementation is done in C++, and python bindings are generated over the C++ API.
 
 This document covers:
 
@@ -81,7 +81,7 @@ API Usage within Marius
 Main Entrypoint
 ---------
 
-Upon a call to `marius_train` for a given configuration file the following will steps:
+Upon a call to `marius_train` for a given configuration file the following steps will occur:
 
 1. Parse the input configuration file which initializes Marius with desired settings.
 
