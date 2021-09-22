@@ -129,11 +129,12 @@ Below shows a simplified version of the main entrypoint to Marius.
 	    // garbage collect
 	}
 
-*************
-Training Loop
-*************
+The next sections cover the guts of the training and evaluation process: `trainer->train()` and `evaluator->evaluate()`.
 
-In the training loop, the specified Trainer will iteratively transfer batches to the GPU to calculate gradients. This process runs for the specified number of epochs. Below shows a simplified version of the synchronous training process in Marius (with timing/reporting removed).
+Training Loop
+---------
+
+In the training loop, the Trainer will iteratively transfer batches to the GPU to calculate gradients. This process runs for the specified number of epochs. Below shows a simplified version of the synchronous training process in Marius (with timing/reporting removed).
 
 ::
 
@@ -171,11 +172,18 @@ In the training loop, the specified Trainer will iteratively transfer batches to
 	    }
 	}
 	
-*************
-Evaluation
-*************
+The next two sections look closer into the model_->train(batch) function for link prediction and node classification.
+	
+model_->train() (Link Prediction)
+---------
 
-The Evaluator evaluates the generated embeddings on the validation or test set. Below is example code showing an evaluate function:
+model_->train() (Node Classification)
+---------
+	
+Evaluation Loop
+---------
+
+The Evaluator evaluates the generated embeddings on the validation or test set. Below is example code showing the evaluate function:
 
 ::
 
@@ -197,6 +205,14 @@ The Evaluator evaluates the generated embeddings on the validation or test set. 
 		model_->evaluate(batch);
 	    }
 	}
+	
+The next two sections look closer into the model_->evaluate(batch) function for link prediction and node classification.
+
+model_->evaluate (Link Prediction)
+---------
+
+model_->evaluate (Node Classification)
+---------
 
 *************
 Classes/Functions
