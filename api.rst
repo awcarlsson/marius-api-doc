@@ -58,11 +58,12 @@ GraphModelStorage
 
 This class contains an interface to access the graph, node features and embeddings, and embedding optimizer state, regardless of the underlying storage backends for each type of data. 
 
-MariusGraph
+MariusGraph 
 ----------
 
 This class contains an arbitrary in-memory graph/sub-graph in CSR representation and supports fast, vectorized CPU and GPU neighbor sampling.
 
+This class is subclassed by GNNGraph, which orders the CSR representation of the graph for fast GNN encoding.
 
 Minor classes
 ---------
