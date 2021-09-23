@@ -177,8 +177,77 @@ The next two sections look closer into the model_->train(batch) function for lin
 model_->train() (Link Prediction)
 ---------
 
+:: 
+
+	void LinkPredictionModel::train(Batch *batch) {
+	    zero_grad();
+
+	    auto all_scores = forward(batch, true);
+	    torch::Tensor rhs_pos_scores = std::get<0>(all_scores);
+	    torch::Tensor rhs_neg_scores = std::get<1>(all_scores);
+	    torch::Tensor lhs_pos_scores = std::get<2>(all_scores);
+	    torch::Tensor lhs_neg_scores = std::get<3>(all_scores);
+	    
+	    torch::Tensor rhs_loss = (*loss_function_)(rhs_pos_scores, rhs_neg_scores);
+	    torch::Tensor lhs_loss = (*loss_function_)(lhs_pos_scores, lhs_neg_scores);
+
+	    torch::Tensor loss = lhs_loss + rhs_loss;
+
+	    loss.backward();
+
+	    step();
+	}
+
+::
+
+	std::tuple<torch::Tensor, torch::Tensor, torch::Tensor, torch::Tensor> LinkPredictionModel::forward(Batch *batch, bool train) {
+
+	    if (train) {
+		batch->unique_node_embeddings_.requires_grad_();
+		
+	        Embeddings gnn_inputs = featurizer_->forward(batch->unique_node_features_, batch->unique_node_embeddings_);
+		
+		batch->gnn_graph_.performMap(); // prepare GNNGraph for GNN Encoder
+		
+		batch->encoded_uniques_ = encoder_->forward(gnn_inputs, batch->gnn_graph_, train);
+	    }
+	    
+	    batch->prepareBatch(); // prepare Batch for decoder
+
+	    return decoder_->forward(batch, train);
+	}
+	
+
 model_->train() (Node Classification)
 ---------
+
+:: 
+
+	void NodeClassificationModel::train(Batch *batch) {
+
+	    zero_grad();
+
+	    Labels y_predicted = forward(batch, true);
+	    Labels y_true = batch->unique_node_labels_;
+	    torch::Tensor targets = torch::argmax(y_true, 1);
+
+	    torch::Tensor loss = torch::nn::functional::cross_entropy(y_predicted, targets);
+
+	    loss.backward();
+
+	    step();
+	}
+
+
+For the node classifcation, a decoder is not used/needed. The output of the GNN encoder is the node labels.
+
+::
+
+	Labels NodeClassificationModel::forward(Batch *batch, bool train) {	    
+	    inputs = featurizer_->forward(batch->unique_node_features_, batch->unique_node_embeddings_);
+	    batch->gnn_graph_.performMap();
+	    return encoder_->forward(inputs, batch->gnn_graph_, train);
+	}
 	
 Evaluation Loop
 ---------
@@ -211,8 +280,38 @@ The next two sections look closer into the model_->evaluate(batch) function for 
 model_->evaluate (Link Prediction)
 ---------
 
+:: 
+
+	void LinkPredictionModel::evaluate(Batch *batch) {
+	
+	    auto all_scores = forward(batch, false);
+	    torch::Tensor rhs_pos_scores = std::get<0>(all_scores);
+	    torch::Tensor rhs_neg_scores = std::get<1>(all_scores);
+	    torch::Tensor lhs_pos_scores = std::get<2>(all_scores);
+	    torch::Tensor lhs_neg_scores = std::get<3>(all_scores);
+
+	    // filter out scores for false negatives
+	    if (marius_options.evaluation.filtered_evaluation) {
+		for (int64_t i = 0; i < batch->batch_size_; i++) {
+		    lhs_neg_scores[i].index_fill_(0, batch->src_neg_filter_eval_[i], -1e9);
+		    rhs_neg_scores[i].index_fill_(0, batch->dst_neg_filter_eval_[i], -1e9);
+		}
+	    }
+
+	    std::dynamic_pointer_cast<LinkPredictionReporter>(reporter_)->addResult(lhs_pos_scores, lhs_neg_scores);
+	    std::dynamic_pointer_cast<LinkPredictionReporter>(reporter_)->addResult(rhs_pos_scores, rhs_neg_scores);
+	}
+
 model_->evaluate (Node Classification)
 ---------
+
+::
+
+	void NodeClassificationModel::evaluate(Batch *batch) {
+	    Labels y_predicted = forward(batch, false);
+	    Labels y_true = batch->unique_node_labels_;
+	    std::dynamic_pointer_cast<NodeClassificationReporter>(reporter_)->addResult(y_true, y_predicted); // categorical accuracy 
+	}
 
 *************
 Classes/Functions
