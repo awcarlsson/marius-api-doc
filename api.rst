@@ -8,10 +8,10 @@ This document describs the Marius programatic API. The API can be used in Python
 
 This document covers:
 
-1. An overview of the main API objects.
-2. How Marius uses the API internally to perform training and evaluation.
-3. How users can define a custom model.
-4. Detailed API object and call information.
+1. A high-level overview of the main API objects.
+2. How Marius uses the C++ API internally to perform training and evaluation.
+3. How users can define a custom model in python (custom GNN encoder, decoder, and loss function)
+4. Detailed API object and function information.
 
 *************
 Main API Objects
