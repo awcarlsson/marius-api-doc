@@ -286,7 +286,7 @@ Save model to experiment directory specified in configuration file.
 
     void load()
 
-Load model from experiment directory specified in configuration file.
+Load model from experiment directory specified in configuration file. 
 
 *************
 Subclass: NodeClassificationModel (Model)
@@ -306,7 +306,7 @@ Functions
 
     Labels forward(Batch *batch, bool train)
 
-Forward specified batch through model to learn labels
+Peform forward pass of the model to predict the labels of the nodes in the given batch.
 
 ===================  ==========  ===========
    Parameter         Type        Description
@@ -318,7 +318,7 @@ train                bool        Set to true for train, false for evaluation
 ===================  ===========
    Return Type       Description
 -------------------  -----------
-Labels               The new node labels
+Labels               The predicted node labels
 ===================  ===========
 
 ::
@@ -363,7 +363,7 @@ Functions
 
     std::tuple<torch::Tensor, torch::Tensor, torch::Tensor, torch::Tensor> forward(Batch *batch, bool train)
 
-Forward specified batch through model to learn edges
+Computes scores of the postive and negative edges in the given batch using their embeddings.
 
 ===================  ==========  ===========
    Parameter         Type        Description
@@ -375,7 +375,7 @@ train                bool        Set to true for train, false for evaluation
 ======================================================================  ===========
    Return Type                                                          Description
 ----------------------------------------------------------------------  -----------
-std::tuple<torch::Tensor, torch::Tensor, torch::Tensor, torch::Tensor>  Updated edge embeddings
+std::tuple<torch::Tensor, torch::Tensor, torch::Tensor, torch::Tensor>  Outputs scores for the positive and negative edges.
 ======================================================================  ===========
 
 ::
@@ -462,7 +462,7 @@ Embeddings           The new embeddings updated after GNN pass-through
 
     void encodeFullGraph(NeighborSampler *neighbor_sampler, GraphModelStorage *graph_storage)
 
-Encodes graph with GNN.
+Performs an encoding of all nodes in the graph. (Will likely rework/rewrite)
 
 ===================  =================  ===========
    Parameter         Type               Description
@@ -483,26 +483,26 @@ Functions
 
     virtual std::tuple<torch::Tensor, torch::Tensor, torch::Tensor, torch::Tensor> forward(Batch *, bool train)
 
-Forwards embedding batch through Relation Operator and Comparator.
+Computes scores of the postive and negative edges in the given batch using their embeddings.
 
 ===================  ==========  ===========
    Parameter         Type        Description
 -------------------  ----------  -----------
-batch                Batch       The input embedding batch
+batch                Batch       The input batch to decode
 train                bool        Set to true for train, false for evaluation
 ===================  ==========  ===========
 
 ======================================================================  ===========
    Return Type                                                          Description
 ----------------------------------------------------------------------  -----------
-std::tuple<torch::Tensor, torch::Tensor, torch::Tensor, torch::Tensor>  The updated embeddings
+std::tuple<torch::Tensor, torch::Tensor, torch::Tensor, torch::Tensor>  Outputs scores for the positive and negative edges.
 ======================================================================  ===========
 
 *************
 Class: RelationOperator
 *************
 
-Encodes information about node relations/edges into embeddings.
+Encodes information node embeddings based on given edge-type embeddings (Relations).
 
 Functions
 --------------------------
@@ -510,7 +510,7 @@ Functions
 
     virtual Embeddings operator()(const Embeddings &embs, const Relations &rels)
 
-Encodes node embeddings with information about node relations.
+Encodes node embeddings with edge-type information.
 
 ===================  ==================  ===========
    Parameter         Type                Description
@@ -537,7 +537,7 @@ Functions
 
     virtual tuple<torch::Tensor, torch::Tensor> operator()(const Embeddings &src, const Embeddings &dst, const Embeddings &negs)
 
-Takes two [n, d] tensors of embeddings as input and outputs a score/distance metric for each element-wise pair.
+Takes source, destination and negative embedding node tensors as input and outputs a score/distance for the postive edges and the destination corrupted negative edges.
 
 ===================  ==================  ===========
    Parameter         Type                Description
@@ -557,7 +557,7 @@ tuple<torch::Tensor, torch::Tensor>  Positive and negative scores
 Class: LossFunction
 *************
 
-Calculates loss for generated embeddings.
+Calculates loss for generated embeddings. Currently only supports link prediction losses. Node classification is hard-coded to use torch.cross_entropy.
 
 Functions
 --------------------------
@@ -610,7 +610,7 @@ Functions
 
     virtual void train(int num_epochs = 1)
 
-Runs training process for embeddings for specified number of epochs.
+Runs training process for specified number of epochs.
 
 ===================  ========  ===========
    Parameter         Type      Description
@@ -622,7 +622,7 @@ num_epochs           int       The number of epochs to train for
 Class: Evaluator
 *************
 
-The evaluator runs the evaluation process using the given model.
+The evaluator runs the evaluation process using the given model and dataset (Batcher).
 
 Class Members
 --------------------------
@@ -650,7 +650,7 @@ validation           bool      If true, evaluate on validation set. Otherwise ev
 *************
 Class: GraphBatcher
 *************
-Represents a training or evaluation set for graph embedding. Iterates over batches and updates model parameters during training.
+Represents a training and/or evaluation set for graph embedding. Iterates over batches and updates node embedding parameters during training.
 
 Class Members
 --------------------------
@@ -686,7 +686,7 @@ Sets graph storage, negative sampler, and neighbor sampler to validation set.
 
     void loadStorage()
 
-Load graph from storage.
+Load graph from storage. 
 
 ::
 
@@ -697,20 +697,9 @@ Unload graph from storage.
 ===================  ==========  ===========
    Parameter         Type        Description
 -------------------  ----------  -----------
-write                bool        Set to true to write graph state to disc
+write                bool        Set to true to write embedding table state to disk
 ===================  ==========  ===========
 
-::
-
-    int64_t getEpochsProcessed()
-
-Get the number of epochs processed.
-
-===================  ===========
-   Return Type       Description
--------------------  -----------
-int64_t              Number of epochs processed                
-===================  ===========
 
 ::
 
@@ -753,7 +742,7 @@ encoded              bool        True for encoded, false if not
 
     void updateEmbeddingsForBatch(Batch *batch, bool gpu)
 
-Applies gradient updates to underlying storage.
+Applies node embedding and optimizer state updates to underlying storage.
 
 ===================  ==========  ===========
    Parameter         Type        Description
@@ -766,7 +755,7 @@ gpu                  bool        If true, only the gpu parameters will be update
 
     void finishedBatch()
 
-Notify that the batch has been completed.
+Notify that the batch has been completed. Used for concurrency control.
 
 ::
 
@@ -789,7 +778,7 @@ int64_t              Number of edges in the graph
 *************
 Class: Batch
 *************
-Contains metadata, edges and embeddings for a single batch.
+Contains metadata, edges, features, and embeddings for a single batch.
 
 
 Constructor
@@ -823,13 +812,13 @@ device_id            int         Device id to transfer to
 
     void prepareBatch()
 
-Populates the src_pos_embeddings, dst_post_embeddings, relation_embeddings, src_neg_embeddings, and dst_neg_embeddings tensors for model computation.
+Populates the src_pos_embeddings, dst_pos_embeddings, relation_embeddings, src_neg_embeddings, and dst_neg_embeddings tensors for decoder computation. Where these are the embedding tensors for the positive and negative edges.
 
 ::
 
     void accumulateGradients()
 
-Accumulates gradients into the unique_node_gradients and unique_relation_gradients tensors, and applies optimizer update rule to create the unique_node_gradients2 and unique_relation_gradients2 tensors.
+Gets embedding table updates and optimizer state updates.
 
 ::
 
@@ -863,18 +852,18 @@ Functions
 
     virtual EdgeList getEdges(Batch *batch)
 
-Get edges from the given batch.
+Get edges for a given batch.
 
 ===================  ==========  ===========
    Parameter         Type        Description
 -------------------  ----------  -----------
-batch                Batch*      Batch to sample from
+batch                Batch*      Batch to sample into
 ===================  ==========  ===========
 
 ===================  ===========
    Return Type       Description
 -------------------  -----------
-EdgeList             The edges from the batch
+EdgeList             Edges sampled for the batch
 ===================  ===========
 
 *************
@@ -903,27 +892,15 @@ Get negative edges from the given batch. Returns tensor of node IDs of shape [nu
 ===================  ==========  ===========
    Parameter         Type        Description
 -------------------  ----------  -----------
-batch                Batch*      Batch to sample from
+batch                Batch*      Batch to sample into
 src                  bool        Source
 ===================  ==========  ===========
 
 ===================  ===========
    Return Type       Description
 -------------------  -----------
-EdgeList             The negative edges from the batch
+torch::Tensor        The negative nodes/edges sampled
 ===================  ===========
-
-::
-
-    void lock()
-
-Lock the sampler_lock_.
-
-::
-
-    void unlock()
-
-Unlock the sampler_lock_.
 
 *************
 Class: NeighborSampler
@@ -963,18 +940,6 @@ outgoing             bool           True if including outgoing neighbors
 -------------------  -----------
 GNNGraph             The neighbors sampled using strategy
 ===================  ===========
-
-::
-
-    void lock()
-
-Lock the sampler_lock_.
-
-::
-
-    void unlock()
-
-Unlock the sampler_lock_.
 
 *************
 Class: MariusGraph
@@ -1060,7 +1025,7 @@ Indices              Tensor of relation IDs
 
     Indices getNeighborOffsets(bool incoming = true)
 
-Get the neighbor offsets from the graph.
+Get the offsets of the neighbors in the sorted edge list.
 
 ===================  ==========  ===========
    Parameter         Type        Description
@@ -1078,7 +1043,7 @@ Indices              Tensor of neighbor offsets
 
     torch::Tensor getNumNeighbors(bool incoming = true)
 
-Get the number of neighbors in a graph.
+Get the number of neighbors for each node in the graph.
 
 ===================  ==========  ===========
    Parameter         Type        Description
@@ -1157,7 +1122,7 @@ Prepares GNN graph for next layer.
 
     Indices getNeighborIDs(bool incoming = true, bool global = false)
 
-Get the neighbor IDs.
+Gets the ids of the neighbors for the current layer.
 
 ===================  ==========  ===========
    Parameter         Type        Description
@@ -1176,7 +1141,7 @@ Indices              Tensor of edge IDs
 
     int64_t getLayerOffset()
 
-Gets the layer offset.
+Gets the offset of the node ids in the outermost layer.
 
 ===================  ===========
    Return Type       Description
