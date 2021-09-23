@@ -10,7 +10,7 @@ This document covers:
 
 1. An overview of the main API objects.
 2. How Marius uses the API internally to perform training and evaluation.
-3. How users can define custom training routines and models.
+3. How users can define a custom model.
 4. Detailed API object and call information.
 
 *************
@@ -312,6 +312,123 @@ model_->evaluate (Node Classification)
 	    Labels y_true = batch->unique_node_labels_;
 	    std::dynamic_pointer_cast<NodeClassificationReporter>(reporter_)->addResult(y_true, y_predicted); // categorical accuracy 
 	}
+	
+*************
+Extending the API
+*************
+
+Custom Model
+------------
+
+The model is initialized in Marius with the line `Model *model = initializeModel();`. For custom models, users will have to replace this line with their own initialization and class that implements the Model interface. Let's do this below for a link prediction model with a custom encoder, decoder, and loss function. 
+
+Let's use python here for readability.
+
+First let's create a custom encoder that uses standard RGCN layers with a sigmoid activation between layers. Here we have to define three functions: the constructor, the reset() function which initializes parameters, and the forward() pass. 
+
+::
+
+	from marius.encoder import RGCNLayer, Encoder 
+
+	class myEncoder(Encoder):
+	
+	    def __init__():
+	        self.num_layers=3
+	        self.num_relations=237 # dataset dependent
+		
+		self.layer_dims = [100, 50, 25, 10] # input dimension 100, output dimension 10
+		self.layers = []
+		
+	        reset()
+		
+	    def reset():
+	        self.layers = []
+		
+		for (i in range(self.num_layers):
+		    layer = RGCNLayer(self.num_relations, layer_dims[i], layer_dims[i+1])
+		    self.layers.append(layer)
+		    torch.register_module("layer:" + str(i), layer)
+		    
+	    def forward(inputs, gnn_graph):
+	        
+		outputs = inputs
+		for (layer in self.layers[:-1]):
+		    outputs = layer.forward(outputs, gnn_graph)
+		    outputs = torch.sigmoid(outputs)
+		    gnn_graph.prepareForNextLayer()
+		
+		# don't apply sigmoid to final layer output
+		outputs = layer[-1].forward(outputs, gnn_graph)
+		
+		return outputs	
+		
+Great now we have a custom encoder which is a varient of RGCN. Now let's add a custom decoder which is a TransE varient, using a dot product instead of L2 distance. For this we have to define a Comparator, which defines how to calculate scores/distance between pairs of embeddings, and a RelationOperator, which defines how to apply the embedding of the relation/edge-type to the node embedding. 
+
+::
+
+	from marius.decoder import LinkPredictionDecoder, Comparator, RelationOperator
+	
+	class myDotComparator(Comparator):
+	    def __init__():
+	        pass
+	    
+	    def forward(src_embs, dst_embs, neg_embs):
+	        pos_scores = (src_embs * dst_embs).sum(-1)
+		neg_scores = (src_embs * neg_embs).sum(-1) # assumes 1 negative per positive for simplicity, can reshape and use torch.bmm for multiple negatives per positive
+		return pos_scores, neg_scores
+		
+	class myTranslationOperator(RelationOperator):
+	    def __init__():
+	        pass
+	    
+	    def forward(node_embs, rel_embs):
+		return node_embs + rel_embs
+	
+	class myDecoder(LinkPredictionDecoder):
+	    def __init__():
+	        self.num_relations = 237
+		self.embedding_dimension=10 # has to match the output of the GNN encoder
+		
+		self.comparator = myDotComparator()
+		self.relation_operator = myTranslationOperator()
+		
+		reset()
+	
+	   def reset():
+	       # initialize relation embeddings
+	       torch.register_parameter("relations", torch.zeros(self.num_relations, self.embedding_dimension))
+
+
+With the encoder and decoder defined we now need to define the loss function for the model. Marius comes with built-in losses for link prediction, let's reimplement the binary_cross_entropy loss
+
+::
+
+	import torch
+	
+	class myLoss(object):
+	    def __init__():
+	        pass
+		
+	    # converts scores for positives and negative into a classification loss. Where postives have a label of 1 and negatives 0 	
+	    def forward(pos_scores, neg_scores):
+	        scores = torch.cat([pos_scores, neg_scores])
+		labels = torch.cat([torch.ones_like(pos_scores), torch.ones_like(neg_scores)]
+		return torch.nn.functional.binary_cross_entropy(scores, labels)
+
+Now we can create our model with the main components defined. This model will use the LinkPredictionModel train/evaluate/forward functions already created. For learning tasks other than LinkPrediction or NodeClassification, these functions will need to be implemented by the user.
+
+::
+
+	class myModel(LinkPredictionModel):
+	
+	    encoder = myEncoder()
+	    decoder = myDecoder()
+	    loss_function = myLoss()
+	    
+	    super().__init__() # will set up optimizers for parameters, if custom optimizer is needed this can be removed and the optimizers can be created here in the constructor.
+	    
+
+To use this model, instead of using ``model = initializeModel()``, we use ``model = myModel()`` and pass the model to the trainer.
 
 *************
 Classes/Functions
