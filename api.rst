@@ -412,7 +412,7 @@ With the encoder and decoder defined we now need to define the loss function for
 	    # converts scores for positives and negative into a classification loss. Where postives have a label of 1 and negatives 0 	
 	    def forward(pos_scores, neg_scores):
 	        scores = torch.cat([pos_scores, neg_scores])
-		labels = torch.cat([torch.ones_like(pos_scores), torch.ones_like(neg_scores)]
+		labels = torch.cat([torch.ones_like(pos_scores), torch.zeros_like(neg_scores)]
 		return torch.nn.functional.binary_cross_entropy(scores, labels)
 
 Now we can create our model with the main components defined. This model will use the LinkPredictionModel train/evaluate/forward functions already created. For learning tasks other than LinkPrediction or NodeClassification, these functions will need to be implemented by the user.
