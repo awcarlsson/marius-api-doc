@@ -264,12 +264,6 @@ Runs training process on specified batch.
 batch                Batch     Batch of embeddings to train on
 ===================  ========  ===========
 
-===================  ===========
-   Return Type       Description
--------------------  -----------
-void
-===================  ===========
-
 ::
 
     virtual void evaluate(Batch *batch)
@@ -282,45 +276,17 @@ Runs evaluation process on specified batch.
 batch                Batch     Batch of embeddings to evaluate
 ===================  ========  ===========
 
-===================  ===========
-   Return Type       Description
--------------------  -----------
-void
-===================  ===========
-
 ::
 
     void save()
 
 Save model to experiment directory specified in configuration file.
 
-===================  ========  ===========
-   Parameter         Type      Description
--------------------  --------  -----------
-===================  ========  ===========
-
-===================  ===========
-   Return Type       Description
--------------------  -----------
-void
-===================  ===========
-
 ::
 
     void load()
 
 Load model from experiment directory specified in configuration file.
-
-===================  ========  ===========
-   Parameter         Type      Description
--------------------  --------  -----------
-===================  ========  ===========
-
-===================  ===========
-   Return Type       Description
--------------------  -----------
-void
-===================  ===========
 
 *************
 Subclass: NodeClassificationModel (Model)
@@ -367,12 +333,6 @@ Runs training process on specified batch.
 batch                Batch     Batch of embeddings to train on
 ===================  ========  ===========
 
-===================  ===========
-   Return Type       Description
--------------------  -----------
-void
-===================  ===========
-
 ::
 
     void evaluate(Batch *batch)
@@ -384,12 +344,6 @@ Runs evaluation process on specified batch.
 -------------------  --------  -----------
 batch                Batch     Batch of embeddings to evaluate
 ===================  ========  ===========
-
-===================  =
-   Return Type
--------------------  -
-void
-===================  =
 
 *************
 Subclass: LinkPredictionModel (Model)
@@ -436,12 +390,6 @@ Runs training process on specified batch.
 batch                Batch     Batch of embeddings to train on
 ===================  ========  ===========
 
-===================  ===========
-   Return Type       Description
--------------------  -----------
-void
-===================  ===========
-
 ::
 
     void evaluate(Batch *batch)
@@ -453,12 +401,6 @@ Runs evaluation process on specified batch.
 -------------------  --------  -----------
 batch                Batch     Batch of embeddings to evaluate
 ===================  ========  ===========
-
-===================  =
-   Return Type
--------------------  -
-void
-===================  =
 
 *************
 Class: Featurizer
@@ -528,12 +470,6 @@ Encodes graph with GNN.
 neighbor_sampler     NeighborSampler    The neighborhood sampling strategy
 graph_storage        GraphModelStorage  Graph model storage object
 ===================  =================  ===========
-
-===================  ===========
-   Return Type       Description
--------------------  -----------
-void                 
-===================  ===========
 
 *************
 Class: Decoder
@@ -682,12 +618,6 @@ Runs training process for embeddings for specified number of epochs.
 num_epochs           int       The number of epochs to train for
 ===================  ========  ===========
 
-===================  =
-   Return Type
--------------------  -
-void
-===================  =
-
 *************
 Class: Evaluator
 *************
@@ -716,12 +646,6 @@ Runs evaluation process.
 -------------------  --------  -----------
 validation           bool      If true, evaluate on validation set. Otherwise evaluate on test set
 ===================  ========  ===========
-
-===================  =
-   Return Type
--------------------  -
-void
-===================  =
 
 *************
 Class: GraphBatcher
@@ -752,50 +676,17 @@ Functions
 
 Sets graph storage, negative sampler, and neighbor sampler to training set.
 
-===================  ==========  ===========
-   Parameter         Type        Description
--------------------  ----------  -----------
-===================  ==========  ===========
-
-===================  ===========
-   Return Type       Description
--------------------  -----------
-void                 
-===================  ===========
-
 ::
 
     void setValidationSet()
 
 Sets graph storage, negative sampler, and neighbor sampler to validation set.
 
-===================  ==========  ===========
-   Parameter         Type        Description
--------------------  ----------  -----------
-===================  ==========  ===========
-
-===================  ===========
-   Return Type       Description
--------------------  -----------
-void                 
-===================  ===========
-
 ::
 
     void loadStorage()
 
 Load graph from storage.
-
-===================  ==========  ===========
-   Parameter         Type        Description
--------------------  ----------  -----------
-===================  ==========  ===========
-
-===================  ===========
-   Return Type       Description
--------------------  -----------
-void                 
-===================  ===========
 
 ::
 
@@ -809,22 +700,11 @@ Unload graph from storage.
 write                bool        Set to true to write graph state to disc
 ===================  ==========  ===========
 
-===================  ===========
-   Return Type       Description
--------------------  -----------
-void                 
-===================  ===========
-
 ::
 
     int64_t getEpochsProcessed()
 
 Get the number of epochs processed.
-
-===================  ==========  ===========
-   Parameter         Type        Description
--------------------  ----------  -----------
-===================  ==========  ===========
 
 ===================  ===========
    Return Type       Description
@@ -838,11 +718,6 @@ int64_t              Number of epochs processed
 
 Check to see whether another batch exists.
 
-===================  ==========  ===========
-   Parameter         Type        Description
--------------------  ----------  -----------
-===================  ==========  ===========
-
 ===================  ===========
    Return Type       Description
 -------------------  -----------
@@ -854,11 +729,6 @@ bool                 True if batch exists, false if not
     Batch *getBatch()
 
 Gets the next batch to be processed by the pipeline. Loads edges from storage, constructs negative edges, and loads CPU embedding parameters.
-
-===================  ==========  ===========
-   Parameter         Type        Description
--------------------  ----------  -----------
-===================  ==========  ===========
 
 ===================  ===========
    Return Type       Description
@@ -879,12 +749,6 @@ batch                Batch*      Batch object to load parameters into
 encoded              bool        True for encoded, false if not
 ===================  ==========  ===========
 
-===================  ===========
-   Return Type       Description
--------------------  -----------
-void                           
-===================  ===========
-
 ::
 
     void updateEmbeddingsForBatch(Batch *batch, bool gpu)
@@ -898,28 +762,11 @@ batch                Batch*      Batch object to apply updates from
 gpu                  bool        If true, only the gpu parameters will be updated
 ===================  ==========  ===========
 
-===================  ===========
-   Return Type       Description
--------------------  -----------
-void                           
-===================  ===========
-
 ::
 
     void finishedBatch()
 
 Notify that the batch has been completed.
-
-===================  ==========  ===========
-   Parameter         Type        Description
--------------------  ----------  -----------
-===================  ==========  ===========
-
-===================  ===========
-   Return Type       Description
--------------------  -----------
-void                           
-===================  ===========
 
 ::
 
@@ -927,27 +774,11 @@ void
 
 Notify that the epoch has been completed. Prepares dataset for a new epoch.
 
-===================  ==========  ===========
-   Parameter         Type        Description
--------------------  ----------  -----------
-===================  ==========  ===========
-
-===================  ===========
-   Return Type       Description
--------------------  -----------
-void                           
-===================  ===========
-
 ::
 
     int64_t getNumEdges()
 
 Gets the number of edges from the graph storage.
-
-===================  ==========  ===========
-   Parameter         Type        Description
--------------------  ----------  -----------
-===================  ==========  ===========
 
 ===================  ===========
    Return Type       Description
@@ -976,17 +807,6 @@ Functions
 
 Construct additional negative samples and neighborhood information from the batch.
 
-===================  ==========  ===========
-   Parameter         Type        Description
--------------------  ----------  -----------
-===================  ==========  ===========
-
-===================  ===========
-   Return Type       Description
--------------------  -----------
-void                 
-===================  ===========
-
 ::
 
     void embeddingsToDevice(int device_id)
@@ -999,28 +819,11 @@ Transfers embeddings, optimizer state, and indices to specified device.
 device_id            int         Device id to transfer to
 ===================  ==========  ===========
 
-===================  ===========
-   Return Type       Description
--------------------  -----------
-void                 
-===================  ===========
-
 ::
 
     void prepareBatch()
 
 Populates the src_pos_embeddings, dst_post_embeddings, relation_embeddings, src_neg_embeddings, and dst_neg_embeddings tensors for model computation.
-
-===================  ==========  ===========
-   Parameter         Type        Description
--------------------  ----------  -----------
-===================  ==========  ===========
-
-===================  ===========
-   Return Type       Description
--------------------  -----------
-void                 
-===================  ===========
 
 ::
 
@@ -1028,33 +831,11 @@ void
 
 Accumulates gradients into the unique_node_gradients and unique_relation_gradients tensors, and applies optimizer update rule to create the unique_node_gradients2 and unique_relation_gradients2 tensors.
 
-===================  ==========  ===========
-   Parameter         Type        Description
--------------------  ----------  -----------
-===================  ==========  ===========
-
-===================  ===========
-   Return Type       Description
--------------------  -----------
-void                 
-===================  ===========
-
 ::
 
     void embeddingsToHost()
 
 Transfers gradients and embedding updates to host.
-
-===================  ==========  ===========
-   Parameter         Type        Description
--------------------  ----------  -----------
-===================  ==========  ===========
-
-===================  ===========
-   Return Type       Description
--------------------  -----------
-void                 
-===================  ===========
 
 ::
 
@@ -1062,13 +843,349 @@ void
 
 Clears all tensor data in the batch.
 
+*************
+Class: EdgeSampler
+*************
+
+Samples the edges from a given batch.
+
+Class Members
+--------------------------
+==================  ======
+   Name             Type
+------------------  ------
+graph_storage_      GraphModelStorage*
+==================  ======
+
+Functions
+--------------------------
+::
+
+    virtual EdgeList getEdges(Batch *batch)
+
+Get edges from the given batch.
+
 ===================  ==========  ===========
    Parameter         Type        Description
 -------------------  ----------  -----------
+batch                Batch*      Batch to sample from
 ===================  ==========  ===========
 
 ===================  ===========
    Return Type       Description
 -------------------  -----------
-void                 
+EdgeList             The edges from the batch
 ===================  ===========
+
+*************
+Class: NegativeSampler
+*************
+
+Samples the negative edges from a given batch.
+
+Class Members
+--------------------------
+==================  ======
+   Name             Type
+------------------  ------
+graph_storage_      GraphModelStorage*
+sampler_lock_       std::mutex
+==================  ======
+
+Functions
+--------------------------
+::
+
+    virtual torch::Tensor getNegatives(Batch *batch, bool src)
+
+Get negative edges from the given batch. Returns tensor of node IDs of shape [num_negs] or a [num_negs, 3] shaped tensor of negative edges.
+
+===================  ==========  ===========
+   Parameter         Type        Description
+-------------------  ----------  -----------
+batch                Batch*      Batch to sample from
+src                  bool        Source
+===================  ==========  ===========
+
+===================  ===========
+   Return Type       Description
+-------------------  -----------
+EdgeList             The negative edges from the batch
+===================  ===========
+
+::
+
+    void lock()
+
+Lock the sampler_lock_.
+
+::
+
+    void unlock()
+
+Unlock the sampler_lock_.
+
+*************
+Class: NeighborSampler
+*************
+
+Samples the neighbors from a given batch given a neighbor sampling strategy.
+
+Class Members
+--------------------------
+===========================  ======
+   Name                      Type
+---------------------------  ------
+graph_storage_               GraphModelStorage*
+sampler_lock_                std::mutex
+neighbor_sampling_strategy_  NeighborSamplingStrategy
+max_neighbors_size_          int
+===========================  ======
+
+Functions
+--------------------------
+::
+
+    virtual GNNGraph getNeighbors(torch::Tensor node_ids, bool incoming, bool outgoing)
+
+Get neighbors of provided nodes using given neighborhood sampling strategy.
+
+===================  =============  ===========
+   Parameter         Type           Description
+-------------------  -------------  -----------
+node_ids             torch::Tensor  Nodes to get neighbors from
+incoming             bool           True if including incoming neighbors
+outgoing             bool           True if including outgoing neighbors
+===================  =============  ===========
+
+===================  ===========
+   Return Type       Description
+-------------------  -----------
+GNNGraph             The neighbors sampled using strategy
+===================  ===========
+
+::
+
+    void lock()
+
+Lock the sampler_lock_.
+
+::
+
+    void unlock()
+
+Unlock the sampler_lock_.
+
+*************
+Class: MariusGraph
+*************
+
+Object to handle arbitrary in-memory graph/sub-graph.
+
+Class Members
+--------------------------
+==========================  ======
+   Name                     Type
+--------------------------  ------
+src_sorted_edges_           EdgeList
+dst_sorted_edges_           EdgeList
+active_in_memory_subgraph_  EdgeList
+node_ids_                   Indices
+out_sorted_uniques_         Indices
+out_offsets_                Indices
+out_num_neighbors_          torch::Tensor
+in_sorted_uniques_          Indices
+in_offsets_                 Indices
+in_num_neighbors_           torch::Tensor
+==========================  ======
+
+Constructor
+--------------------------
+::
+
+    MariusGraph()
+    MariusGraph(EdgeList edges)
+
+Functions
+--------------------------
+::
+
+    Indices getNodeIDs()
+
+Get the node IDs from the graph.
+
+===================  ===========
+   Return Type       Description
+-------------------  -----------
+Indices              Tensor of node IDs
+===================  ===========
+
+::
+
+    Indices getEdges(bool incoming = true)
+
+Get the edges from the graph.
+
+===================  ==========  ===========
+   Parameter         Type        Description
+-------------------  ----------  -----------
+incoming             bool        Get incoming edges if true, outgoing edges if false
+===================  ==========  ===========
+
+===================  ===========
+   Return Type       Description
+-------------------  -----------
+Indices              Tensor of edge IDs
+===================  ===========
+
+::
+
+    Indices getRelationIDs(bool incoming = true)
+
+Get the relation IDs from the graph.
+
+===================  ==========  ===========
+   Parameter         Type        Description
+-------------------  ----------  -----------
+incoming             bool        Get incoming relation IDs if true, outgoing relation IDs if false
+===================  ==========  ===========
+
+===================  ===========
+   Return Type       Description
+-------------------  -----------
+Indices              Tensor of relation IDs
+===================  ===========
+
+::
+
+    Indices getNeighborOffsets(bool incoming = true)
+
+Get the neighbor offsets from the graph.
+
+===================  ==========  ===========
+   Parameter         Type        Description
+-------------------  ----------  -----------
+incoming             bool        Get incoming neighbor offsets if true, outgoing neighbor offsets if false
+===================  ==========  ===========
+
+===================  ===========
+   Return Type       Description
+-------------------  -----------
+Indices              Tensor of neighbor offsets
+===================  ===========
+
+::
+
+    torch::Tensor getNumNeighbors(bool incoming = true)
+
+Get the number of neighbors in a graph.
+
+===================  ==========  ===========
+   Parameter         Type        Description
+-------------------  ----------  -----------
+incoming             bool        Get number of incoming neighbor if true, number of outgoing neighbors if false
+===================  ==========  ===========
+
+===================  ===========
+   Return Type       Description
+-------------------  -----------
+torch::Tensor        Number of neighbors
+===================  ===========
+
+::
+
+    std::tuple<torch::Tensor, torch::Tensor> getNeighborsForNodeIds(torch::Tensor node_ids, bool incoming, NeighborSamplingStrategy neighbor_sampling_strategy, int max_neighbors_size)
+
+Get the neighbors for the specified node IDs.
+
+==========================  ========================  ===========
+   Parameter                Type                      Description
+--------------------------  ------------------------  -----------
+node_ids                    torch::Tensor             The node IDs to get neighbors from
+incoming                    bool                      Get incoming neighbors if true, outgoing if false
+neighbor_sampling_strategy  NeighborSamplingStrategy  The neighbor sampling strategy to use
+max_neighbors_size          int                       The maximum number of neighbors to sample
+==========================  ========================  ===========
+
+========================================  ===========
+   Return Type                            Description
+----------------------------------------  -----------
+std::tuple<torch::Tensor, torch::Tensor>  Neighbors of specified nodes.
+========================================  ===========
+
+::
+
+    void clear()
+
+Clear the graph.
+
+*************
+Subclass: GNNGraph (MariusGraph)
+*************
+
+MariusGraph sublass, orders the CSR representation of the graph for fast GNN encoding.
+
+Class Members
+--------------------------
+==========================  ======
+   Name                     Type
+--------------------------  ------
+hop_offsets_                Indices
+in_neighbors_mapping_       Indices
+out_neighbors_mapping_      Indices
+in_neighbors_vec_           std::vector<torch::Tensor>
+out_neighbors_vec_          std::vector<torch::Tensor>
+num_nodes_in_memory_        int
+==========================  ======
+
+Constructor
+--------------------------
+::
+
+    GNNGraph()
+    GNNGraph(Indices hop_offsets, Indices node_ids, Indices in_offsets, std::vector<torch::Tensor> in_neighbors_vec, Indices in_neighbors_mapping, Indices out_offsets, std::vector<torch::Tensor> out_neighbors_vec, Indices out_neighbors_mapping, int num_nodes_in_memory)
+
+Functions
+--------------------------
+::
+
+    void prepareForNextLayer()
+
+Prepares GNN graph for next layer.
+
+::
+
+    Indices getNeighborIDs(bool incoming = true, bool global = false)
+
+Get the neighbor IDs.
+
+===================  ==========  ===========
+   Parameter         Type        Description
+-------------------  ----------  -----------
+incoming             bool        Get incoming edges if true, outgoing edges if false
+global               bool        If false, return node IDs local to the batch. If true, return any global node IDs
+===================  ==========  ===========
+
+===================  ===========
+   Return Type       Description
+-------------------  -----------
+Indices              Tensor of edge IDs
+===================  ===========
+
+::
+
+    int64_t getLayerOffset()
+
+Gets the layer offset.
+
+===================  ===========
+   Return Type       Description
+-------------------  -----------
+int64_t              Layer offset
+===================  ===========
+
+::
+
+    void performMap()
+
+Maps local IDs to batch.
